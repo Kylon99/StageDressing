@@ -1,0 +1,41 @@
+﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <vertical vertical-fit='Unconstrained'>
+    <horizontal pad-top='2'>
+      <text font-size='4' text='Add GameObjects in AssetBundles to this Scene' overflow-mode='Ellipsis' align='MidlineLeft'/>
+      <button text='Reload' font-size='3' hover-hint='Reload all the asset bundles in the CustomStageAsset folder' word-wrapping='false' pref-width='18' pref-height='8' on-click='OnNew'/>
+      <button text='Add All' font-size='3' hover-hint='Add all GameObjects to this scene' word-wrapping='false' pref-width='16' pref-height='8' on-click='OnAddGameObjects'/>
+    </horizontal>
+    <horizontal vertical-fit='Unconstrained' pad-bottom='3'>
+      <vertical>
+        <pg-button pref-width='50' dir='Up' click-event='AssetBundleList#PageUp'/>
+        <custom-list
+          list-width='50'
+          id='AssetBundleList'
+          visible-cells='6'
+          cell-size='6'
+          contents='AssetBundleListContents'
+          select-cell='OnAssetBundleSelected'>
+          <horizontal>
+            <text font-size='3.5' align='Left' text='~AssetBundleName' />
+          </horizontal>
+        </custom-list>
+        <pg-button pref-width='50' dir='Down' click-event='AssetBundleList#PageDown'/>
+      </vertical>
+      <vertical>
+        <pg-button pref-width='50' dir='Up' click-event='GameObjectList#PageUp'/>
+        <custom-list
+          list-width='45'
+          id='GameObjectList'
+          visible-cells='6'
+          cell-size='6'
+          contents='GameObjectListContents'>
+          <horizontal>
+            <text font-size='3.5' align='BottomLeft' text='~AssetBundleGameObjectList' />
+            <button font-size='3' word-wrapping='false' text='Add' pref-width='16' pref-height='4' on-click='OnAddGameObjects' />
+          </horizontal>
+        </custom-list>
+        <pg-button pref-width='50' dir='Down' click-event='GameObjectList#PageDown'/>
+      </vertical>
+    </horizontal>
+  </vertical>
+</bg>
