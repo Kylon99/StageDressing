@@ -1,0 +1,72 @@
+﻿<bg xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd">
+  <vertical child-control-height="false">
+
+    <!-- View Header -->
+    <horizontal pad-left="15" pad-right="15" bg="panel-top" pref-height="8">
+      <vertical pad-left="1" pad-top="2" pref-height="12" vertical-fit="PreferredSize">
+        <text font-size="6" text="List of Instances" overflow-mode="Ellipsis"/>
+      </vertical>
+    </horizontal>
+
+    <!-- Main View -->
+    <horizontal pad-left="3">
+
+      <!-- Instance List -->
+      <vertical background="round-rect-panel" pad-left="3" pad-right="3" preferred-height="60" preferred-width="30">
+        <pg-button pref-width="20" dir="Up" click-event="InstanceList#PageUp"/>
+        <list id="InstanceList" list-style="Simple" expand-cell="true" select-cell="OnInstanceSelected" />
+        <pg-button pref-width="20" dir="Down" click-event="InstanceList#PageDown"/>
+      </vertical>
+
+      <vertical preferred-width="1"/>
+
+      <!-- Settings  -->
+      <settings-container child-align="UpperLeft" preferred-height="60" preferred-width="75">
+        <!--<horizontal preferred-height="25">
+          <vertical preferred-width="70">
+            <text font-size="4" text="~PositionText" />
+            <text font-size="4" text="~RotationText" />
+            <text font-size="4" text="~ScaleText" />
+          </vertical>
+        </horizontal>-->
+        <horizontal>
+          <checkbox text="Grabbable" font-size="4" apply-on-change="true" get-event="grabGet"/>
+          <checkbox text="Show Bounds" font-size="4" apply-on-change="true" get-event="showBoundsGet"/>
+        </horizontal>
+        <horizontal>
+          <text font-size="4" text="Calibration"/>
+        </horizontal>
+        <horizontal>
+          <button font-size="4" text="LHR-1D6FU6E56" />
+          <button font-size="4" text="X" />
+        </horizontal>
+        <horizontal>
+          <button font-size="4" on-click="OnCalibrate" text="Calibrate Now" />
+          <button font-size="4" on-click="OnUnCalibrate" text="Uncalibrate" />
+        </horizontal>
+        <horizontal pad-left="3" pad-top="3">
+          <button text="Place" font-size="4" hover-hint="Move, rotate and scale the game object in the scene"/>
+          <button text="Delete" font-size="4" hover-hint="Delete this game object from the scene"/>
+        </horizontal>
+      </settings-container>
+    </horizontal>
+  </vertical>
+
+  <!-- Select Tracker Modal -->
+  <modal show-event="showSelectTrackerModal" hide-event="closeSelectTrackerModal"
+         move-to-center="true" click-off-closes="true" size-delta-x="120" size-delta-y="90" >
+
+    <!-- Select Tracker List -->
+    <vertical pad-top="3" pad-bottom="13">
+      <pg-button pref-width="110" dir="Up" click-event="SelectTrackerList#PageUp"/>
+      <list id="SelectTrackerList" list-style="Simple" expand-cell="true" select-cell="OnTrackerListCellSelected" />
+      <pg-button pref-width="110" dir="Down" click-event="SelectTrackerList#PageDown"/>
+    </vertical>
+
+    <!-- Modal Dialog Bottom Buttons -->
+    <bottom-button-panel>
+      <button click-event="closeSelectTrackerModal" on-click="OnTrackerSelectCancelled" text="Cancel"/>
+      <button click-event="closeSelectTrackerModal" text="Select" />
+    </bottom-button-panel>
+  </modal>
+</bg>

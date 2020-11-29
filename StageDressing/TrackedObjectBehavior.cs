@@ -1,4 +1,5 @@
-﻿using StageDressing.Models;
+﻿using Newtonsoft.Json;
+using StageDressing.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +9,7 @@ namespace StageDressing
 {
     public class TrackedObjectBehavior : MonoBehaviour
     {
-        private List<InstanceInfo> trackedInstances = new List<InstanceInfo>();
-
-        private Guid guid;
-        private void Awake()
-        {
-            guid = Guid.NewGuid();
-        }
+        private List<InstanceData> trackedInstances = new List<InstanceData>();
 
         public void LoadTrackedInstances(bool gameScene = false)
         {
@@ -26,12 +21,15 @@ namespace StageDressing
                 .SelectMany(p => p.Instances).Where(i => !String.IsNullOrEmpty(i.CalibratedTrackerSerial)).ToList();
         }
 
-        public static void Calibrate(InstanceInfo instance)
+        public static void Calibrate(InstanceData instance)
         {
+            StageDressing.Logger.Info($"instance: {JsonConvert.SerializeObject(instance, Formatting.Indented)}");
+
             // Attempt to get the current tracker position.  Calibration fails if this fails
             var trackerPose = TrackedDeviceManager.instance.GetPoseFromSerial(instance.CalibratedTrackerSerial);
             if (trackerPose == null)
             {
+                StageDressing.Logger.Info($"tracker pose was null!");
                 instance.IsCalibrated = false;
                 return;
             }
@@ -44,15 +42,14 @@ namespace StageDressing
             instance.CalibratedTrackerPose = trackerPose.Value;
         }
 
-        public void Calibrate()
+        public static void UnCalibrate(InstanceData instance)
         {
-            trackedInstances.ForEach(i => Calibrate(i));
+            instance.IsCalibrated = false;
+            instance.CalibratedPose = new Pose(Vector3.one, Quaternion.identity);
+            instance.CalibratedTrackerPose = new Pose(Vector3.one, Quaternion.identity);
         }
 
-        public void UnCalibrate()
-        {
-            trackedInstances.ForEach(i => i.IsCalibrated = false);
-        }
+        #region Unity Methods
 
         private void Update()
         {
@@ -73,6 +70,8 @@ namespace StageDressing
                 }
             }
         }
+
+        #endregion
     }
 
 }

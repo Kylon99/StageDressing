@@ -17,13 +17,62 @@ namespace StageDressing.Models
         public StageConfigurationData Configuration { get; private set; }
 
         /// <summary>
+        /// Loads the saved configuration from disk
+        /// exist.
+        /// </summary>
+        public void LoadConfiguration()
+        {
+            if (!File.Exists(configurationFile))
+            {
+                // Create a new empty configuration if it doesn't exist
+                StageConfigurationData newConfiguration = new StageConfigurationData();
+                string json = JsonConvert.SerializeObject(newConfiguration, Formatting.Indented);
+                File.WriteAllText(configurationFile, json);
+
+                this.Configuration = newConfiguration;
+                return;
+            }
+
+            string configuration = File.ReadAllText(configurationFile);
+            this.Configuration = JsonConvert.DeserializeObject<StageConfigurationData>(configuration);
+        }
+
+        /// <summary>
         /// Writes the current configuration to disk
         /// </summary>
         public void SaveConfiguration()
         {
-            string fileName = Path.Combine(this.stageAssetsPath, this.configurationFile);
-            string json = JsonConvert.SerializeObject(this.Configuration, Formatting.Indented, new PoseConverter());
-            File.WriteAllText(fileName, json);
+            string json = JsonConvert.SerializeObject(this.Configuration, Formatting.Indented);
+            File.WriteAllText(configurationFile, json);
+        }
+
+        /// <summary>
+        /// Creates a new definition of a scene but does not load it yet
+        /// </summary>
+        /// <param name="assetBundleFile"></param>
+        public void CreateNewScene(string assetBundleFile)
+        {
+            var assetBundle = AssetBundle.LoadFromFile(Path.Combine(stageAssetsPath, assetBundleFile));
+            if (assetBundle == null)
+            {
+                StageDressing.Logger.Error($"Could not load asset bundle {assetBundleFile}");
+                return;
+            }
+
+            SceneData scene = new SceneData()
+            {
+                Name = assetBundleFile,
+                File = assetBundleFile,
+                ShowInMenu = true,
+                ShowInGame = false,
+                FollowRoomAdjust = true,
+                Prefabs = assetBundle.GetAllAssetNames().Select(a => new PrefabData
+                {
+                    Name = a,
+                    Enabled = true,
+                    Instances = new List<InstanceData>()
+                }).ToList()
+            };
         }
 
         /// <summary>
@@ -34,39 +83,34 @@ namespace StageDressing.Models
             this.DestroyAllInstances();
 
             // Destroy unused prefabs
-            IEnumerable<PrefabInfo> disabledPrefabs = Configuration.Scenes.SelectMany(s => s.Prefabs).Where(go => go.Enabled == false);
+            IEnumerable<PrefabData> disabledPrefabs = Configuration.Scenes.SelectMany(s => s.Prefabs).Where(go => go.Enabled == false);
             disabledPrefabs.ToList().ForEach(go =>
             {
                 GameObject.Destroy(go.Prefab);
                 go.Prefab = null;
             });
 
-            // Group by AssetBundles to prepare for loading
-            IEnumerable<PrefabInfo> allPrefabs = this.Configuration.Scenes
-                .Where(s => s.ShowInMenu || s.ShowInGame)
-                .SelectMany(s => s.Prefabs)
-                .Where(go => go.Enabled && go.Prefab == null);
-
-            IEnumerable<IGrouping<string, PrefabInfo>> assetBundleGroups = allPrefabs.GroupBy(go => go.File);
-            foreach (var assetBundleGroup in assetBundleGroups)
+            // Load all prefabs in scenes that are shown and enabled
+            foreach (var scene in this.Configuration.Scenes.Where(s => s.ShowInMenu || s.ShowInGame))
             {
-                var assetBundle = AssetBundle.LoadFromFile(Path.Combine(stageAssetsPath, assetBundleGroup.Key));
+                var assetBundle = AssetBundle.LoadFromFile(Path.Combine(stageAssetsPath, scene.File));
                 if (assetBundle == null)
                 {
                     // AssetBundle could not be loaded; mark all game objects as error and skip
-                    assetBundleGroup.ToList().ForEach(go => go.Error = true);
+                    scene.Error = true;
+                    scene.Prefabs.ForEach(p => p.Error = true);
                     continue;
                 }
 
                 // Load all game objects from this bundle
-                foreach (PrefabInfo prefab in assetBundleGroup)
+                foreach (var prefab in scene.Prefabs)
                 {
-                    if (prefab.Prefab == null)
-                    {
-                        prefab.Prefab = assetBundle.LoadAsset<GameObject>(prefab.Name);
-                        prefab.Prefab.name += "Prefab";
-                        prefab.Error = prefab.Prefab == null;
-                    }
+                    if (!prefab.Enabled) continue;
+                    if (prefab.Prefab != null) GameObject.Destroy(prefab.Prefab);
+
+                    prefab.Prefab = assetBundle.LoadAsset<GameObject>(prefab.Name);
+                    prefab.Prefab.name += "Prefab";
+                    prefab.Error = prefab.Prefab == null;
                 }
 
                 assetBundle.Unload(false);
@@ -80,7 +124,7 @@ namespace StageDressing.Models
         {
             this.DestroyAllInstances();
 
-            IEnumerable<PrefabInfo> enabledPrefabs = this.Configuration.Scenes.Where(s => s.ShowInMenu).SelectMany(s => s.Prefabs).Where(p => p.Enabled);
+            IEnumerable<PrefabData> enabledPrefabs = this.Configuration.Scenes.Where(s => s.ShowInMenu).SelectMany(s => s.Prefabs).Where(p => p.Enabled);
             enabledPrefabs.ToList().ForEach(prefab =>
             {
                 prefab.Instances?.ForEach(instance =>
@@ -118,9 +162,9 @@ namespace StageDressing.Models
         /// </summary>
         public void DestroyMenuInstances()
         {
-            IEnumerable<PrefabInfo> allHiddenPrefabs = this.Configuration.Scenes.Where(s => !s.ShowInMenu).SelectMany(s => s.Prefabs).Where(g => g.Instances != null && g.Instances.Any());
-            IEnumerable<PrefabInfo> allDisabledPrefabs = this.Configuration.Scenes.SelectMany(s => s.Prefabs).Where(g => !g.Enabled && g.Instances != null && g.Instances.Any());
-            IEnumerable<PrefabInfo> allToBeDestroyed = allHiddenPrefabs.Concat(allDisabledPrefabs);
+            IEnumerable<PrefabData> allHiddenPrefabs = this.Configuration.Scenes.Where(s => !s.ShowInMenu).SelectMany(s => s.Prefabs).Where(g => g.Instances != null && g.Instances.Any());
+            IEnumerable<PrefabData> allDisabledPrefabs = this.Configuration.Scenes.SelectMany(s => s.Prefabs).Where(g => !g.Enabled && g.Instances != null && g.Instances.Any());
+            IEnumerable<PrefabData> allToBeDestroyed = allHiddenPrefabs.Concat(allDisabledPrefabs);
             allToBeDestroyed.ToList().ForEach(p =>
             {
                 p.Instances.ForEach(i =>
@@ -139,7 +183,7 @@ namespace StageDressing.Models
             this.DestroyAllInstances();
 
             // Get all enabled menu game objects
-            IEnumerable<PrefabInfo> enabledGamePrefabs = this.Configuration.Scenes.Where(s => s.ShowInGame).SelectMany(s => s.Prefabs).Where(go => go.Enabled);
+            IEnumerable<PrefabData> enabledGamePrefabs = this.Configuration.Scenes.Where(s => s.ShowInGame).SelectMany(s => s.Prefabs).Where(go => go.Enabled);
             enabledGamePrefabs.ToList().ForEach(p =>
             {
                 p.Instances.ForEach(instance =>
@@ -163,7 +207,7 @@ namespace StageDressing.Models
         /// </summary>
         public void DestroyGameInstances()
         {
-            IEnumerable<PrefabInfo> allGamePrefabs = this.Configuration.Scenes.SelectMany(s => s.Prefabs).Where(g => g.Instances != null && g.Instances.Any());
+            IEnumerable<PrefabData> allGamePrefabs = this.Configuration.Scenes.SelectMany(s => s.Prefabs).Where(g => g.Instances != null && g.Instances.Any());
             allGamePrefabs.ToList().ForEach(p =>
             {
                 p.Instances.ForEach(i =>
@@ -174,34 +218,28 @@ namespace StageDressing.Models
             });
         }
 
-
-
-        private void Awake()
+        /// <summary>
+        /// Get a list of all the asset bundle file names in the StageDressing Asset Directory
+        /// </summary>
+        /// <returns>A list of file names</returns>
+        public List<string> GetAllAssetBundles()
         {
-            this.LoadConfiguration();
+            var filePathNames = Directory.GetFiles(this.stageAssetsPath).ToList();
+            return filePathNames.Select(fp => Path.GetFileName(fp)).ToList();
         }
 
         /// <summary>
-        /// Loads the saved configuration from disk and also checks if the AssetBundle files
-        /// exist.
+        /// Gets the names of all the assets in the AssetBundle.
         /// </summary>
-        private void LoadConfiguration()
+        /// <param name="fileName">The file name of the AssetBundle</param>
+        /// <returns>A list of names of assets.  A null is returned if the asset bundle failed to load</returns>
+        public List<string> GetAllPrefabNames(string fileName)
         {
-            if (!File.Exists(configurationFile))
-            {
-                // Create a new empty configuration if it doesn't exist
-                StageConfigurationData newConfiguration = new StageConfigurationData();
-                string json = JsonConvert.SerializeObject(newConfiguration, Formatting.Indented, new PoseConverter());
-                File.WriteAllText(configurationFile, json);
+            var assetBundle = AssetBundle.LoadFromFile(Path.Combine(stageAssetsPath, fileName));
+            if (assetBundle == null) return null;
 
-                this.Configuration = newConfiguration;
-                return;
-            }
-
-            string configuration = File.ReadAllText(configurationFile);
-            this.Configuration = JsonConvert.DeserializeObject<StageConfigurationData>(configuration, new PoseConverter());
+            return assetBundle.GetAllAssetNames().ToList();
         }
-
     }
 
 }

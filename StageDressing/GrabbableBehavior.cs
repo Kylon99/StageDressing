@@ -10,13 +10,13 @@ namespace StageDressing
     {
         private class GrabbedInstanceInfo
         {
-            public InstanceInfo grabbedInstance;
+            public InstanceData grabbedInstance;
             public Pose grabbedStartPose;
             public Pose grabbedDevicePose;
             public InputDevice grabbedDevice;
         }
 
-        private List<InstanceInfo> grabbableInstances = new List<InstanceInfo>();
+        private List<InstanceData> grabbableInstances = new List<InstanceData>();
         private GrabbedInstanceInfo leftGrabbed;
         private GrabbedInstanceInfo rightGrabbed;
 
@@ -80,7 +80,7 @@ namespace StageDressing
             if (!containedInstances.Any()) return null;
 
             // Save the grabbed instance
-            InstanceInfo grabbedInstance = (containedInstances.Count == 1)
+            InstanceData grabbedInstance = (containedInstances.Count == 1)
                 ? containedInstances[0]
                 : containedInstances.OrderByDescending(i => (i.Instance.transform.position - devicePosition).sqrMagnitude).First();
 
@@ -156,15 +156,15 @@ namespace StageDressing
             if (!this.grabbableInstances.Any()) return;
 
             // Check for trigger clicks first as it's debounced and will override simply having the trigger down
-            if (PersistentSingleton<InputManager>.instance.GetRightTriggerClicked())
+            if (InputManager.instance.GetRightTriggerClicked())
             {
-                this.rightGrabbed = this.GrabInstance(PersistentSingleton<InputManager>.instance.RightController);
+                this.rightGrabbed = this.GrabInstance(InputManager.instance.RightController);
                 return;
             }
 
-            if (PersistentSingleton<InputManager>.instance.GetLeftTriggerClicked())
+            if (InputManager.instance.GetLeftTriggerClicked())
             {
-                this.leftGrabbed = this.GrabInstance(PersistentSingleton<InputManager>.instance.LeftController);
+                this.leftGrabbed = this.GrabInstance(InputManager.instance.LeftController);
                 return;
             }
 
@@ -174,7 +174,7 @@ namespace StageDressing
             // Check for trigger being held down on the device
             if (this.rightGrabbed != null)
             {
-                if (PersistentSingleton<InputManager>.instance.GetRightTriggerDown())
+                if (InputManager.instance.GetRightTriggerDown())
                 {
                     // Trigger held so track instance position with the device
                     Pose? grabbedPose = TrackedDeviceManager.GetDevicePose(rightGrabbed.grabbedDevice);
@@ -194,7 +194,7 @@ namespace StageDressing
 
             if (this.leftGrabbed != null)
             {
-                if (PersistentSingleton<InputManager>.instance.GetLeftTriggerDown())
+                if (InputManager.instance.GetLeftTriggerDown())
                 {
                     // Trigger held so track instance position with the device
                     Pose? grabbedPose = TrackedDeviceManager.GetDevicePose(leftGrabbed.grabbedDevice);

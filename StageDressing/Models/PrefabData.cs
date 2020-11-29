@@ -6,12 +6,11 @@ using UnityEngine;
 namespace StageDressing.Models
 {
     [Serializable]
-    public class PrefabInfo
+    public class PrefabData
     {
         public string Name { get; set; }
-        public string File { get; set; }
         public bool Enabled { get; set; }
-        public List<InstanceInfo> Instances { get; set; }
+        public List<InstanceData> Instances { get; set; }
 
         /// <summary>
         /// The loaded Prefab.  Null when it has failed to load.

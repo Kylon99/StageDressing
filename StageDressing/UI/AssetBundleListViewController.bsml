@@ -1,41 +1,63 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
-  <vertical vertical-fit='Unconstrained'>
-    <horizontal pad-top='2'>
-      <text font-size='4' text='Add GameObjects in AssetBundles to this Scene' overflow-mode='Ellipsis' align='MidlineLeft'/>
-      <button text='Reload' font-size='3' hover-hint='Reload all the asset bundles in the CustomStageAsset folder' word-wrapping='false' pref-width='18' pref-height='8' on-click='OnNew'/>
-      <button text='Add All' font-size='3' hover-hint='Add all GameObjects to this scene' word-wrapping='false' pref-width='16' pref-height='8' on-click='OnAddGameObjects'/>
+  <vertical child-control-height='false'>
+    <!-- View Header -->
+    <horizontal pad-left='15' pad-right='15' bg='panel-top' pref-height='8'>
+      <vertical pad-left='1' pad-top='2' pref-height='12' vertical-fit='PreferredSize'>
+        <text font-size='6' text='Asset Bundles on Disk' overflow-mode='Ellipsis'/>
+      </vertical>
+      <vertical pad-left='3'>
+        <button text='Reload' font-size='4' hover-hint='Reload all the asset bundles in the CustomStageAsset folder'
+            word-wrapping='false' pref-width='20' pref-height='6' on-click='OnReload'/>
+      </vertical>
     </horizontal>
-    <horizontal vertical-fit='Unconstrained' pad-bottom='3'>
-      <vertical>
-        <pg-button pref-width='50' dir='Up' click-event='AssetBundleList#PageUp'/>
-        <custom-list
-          list-width='50'
-          id='AssetBundleList'
-          visible-cells='6'
-          cell-size='6'
-          contents='AssetBundleListContents'
-          select-cell='OnAssetBundleSelected'>
-          <horizontal>
-            <text font-size='3.5' align='Left' text='~AssetBundleName' />
-          </horizontal>
-        </custom-list>
-        <pg-button pref-width='50' dir='Down' click-event='AssetBundleList#PageDown'/>
+
+    <!-- Main View -->
+    <horizontal>
+
+      <!-- AssetBundle List -->
+      <vertical background='round-rect-panel' pad-left='3' pad-right='3' preferred-width='75' preferred-height='55'>
+        <pg-button pref-width='40' dir='Up' click-event='AssetBundleList#PageUp'/>
+        <list id='AssetBundleList' list-style='Simple' expand-cell='true' select-cell='OnAssetBundleSelected' />
+        <pg-button pref-width='40' dir='Down' click-event='AssetBundleList#PageDown'/>
       </vertical>
+
+      <vertical preferred-width='3'/>
+
+      <!-- Settings  -->
       <vertical>
-        <pg-button pref-width='50' dir='Up' click-event='GameObjectList#PageUp'/>
-        <custom-list
-          list-width='45'
-          id='GameObjectList'
-          visible-cells='6'
-          cell-size='6'
-          contents='GameObjectListContents'>
-          <horizontal>
-            <text font-size='3.5' align='BottomLeft' text='~AssetBundleGameObjectList' />
-            <button font-size='3' word-wrapping='false' text='Add' pref-width='16' pref-height='4' on-click='OnAddGameObjects' />
-          </horizontal>
-        </custom-list>
-        <pg-button pref-width='50' dir='Down' click-event='GameObjectList#PageDown'/>
+        <settings-container child-align='UpperCenter' pad-left='3' pad-right='3' pad-top='5' preferred-width='30' preferred-height='50'>
+          <button text='Create Scene' font-size='4' hover-hint='Create Scene from this Asset Bundle'
+                  word-wrapping='false' pref-width='30' pref-height='8' on-click='OnCreateScene'/>
+          <button text='Show Prefabs' font-size='4' hover-hint='Show the list of Prefabs inside the Asset Bundle'
+                  word-wrapping='false' pref-width='30' pref-height='8' click-event='showPrefabListModal' on-click='OnShowPrefabList'/>
+        </settings-container>
       </vertical>
+
+      <!-- List of Prefabs Modal  -->
+      <modal show-event="showPrefabListModal" hide-event="closePrefabListModal"
+       move-to-center="true" click-off-closes="true" size-delta-x="100" size-delta-y="80" >
+
+        <!-- Prefab List -->
+        <vertical preferred-width='100' pad-top="3" pad-bottom="13">
+          <horizontal pad-left='25'>
+            <text font-size='4' text='List of Prefabs in Selected Asset Bundle' overflow-mode='Ellipsis'/>
+          </horizontal>
+          <vertical background='round-rect-panel' preferred-height='55'>
+            <vertical pad-left='3' pad-right='3' pad-top='2' pad-bottom='2'>
+              <pg-button pref-width='60' dir='Up' click-event='PrefabList#PageUp'/>
+              <list id='PrefabList' pref-width='80' list-style='Simple' expand-cell='true'/>
+              <pg-button pref-width='60' dir='Down' click-event='PrefabList#PageDown'/>
+            </vertical>
+          </vertical>
+        </vertical>
+
+        <!-- Bottom Buttons -->
+        <bottom-button-panel>
+          <button click-event="closePrefabListModal" text="Close" />
+        </bottom-button-panel>
+
+      </modal>
     </horizontal>
   </vertical>
+
 </bg>

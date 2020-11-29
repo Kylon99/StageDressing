@@ -1,57 +1,29 @@
 ﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
-  <horizontal pad-left='3'>
-    <vertical>
-      <horizontal child-align='UpperRight' preferred-width='24'>
-        <button text='Calibrate' font-size='3' pref-width='24' pref-height='5' on-click='OnCalibrate'/>
-        <button text='UnCal' font-size='3' pref-width='24' pref-height='5' on-click='OnUnCalibrate'/>
-      </horizontal>
-      <vertical>
-        <pg-button pref-width='50' dir='Up' click-event='SceneList#PageUp'/>
-        <custom-list
-          list-width='50'
-          id='SceneList'
-          visible-cells='6'
-          cell-size='7'
-          contents='SceneListContents'
-          select-cell='OnSceneSelected'>
-          <horizontal>
-            <text text='~SceneName' />
-          </horizontal>
-        </custom-list>
-        <pg-button pref-width='50' dir='Down' click-event='SceneList#PageDown'/>
-      </vertical>
+  <horizontal preferred-height='50' pad-bottom='5'>
+    <vertical pad-left='3'  preferred-width='65'>
+      <pg-button pref-width='40' dir='Up' click-event='SceneList#PageUp'/>
+      <list id='SceneList' list-style='Simple' expand-cell='true' select-cell='OnSceneSelected' />
+      <pg-button pref-width='40' dir='Down' click-event='SceneList#PageDown'/>
     </vertical>
-    <settings-container active='true' child-align='UpperCenter' preferred-height='65' preferred-width='85'>
-      <horizontal  preferred-height='12' pad-bottom='3'>
+    <settings-container child-align='UpperCenter' pad-left='3' pad-right='3' preferred-height='25' preferred-width='80'>
+      <horizontal preferred-height='12' pad-bottom='3'>
         <text font-size='6' text='~SelectedSceneName' overflow-mode='Ellipsis'/>
         <button font-size='3' pref-width='12' pref-height='5' word-wrapping='false' text='Rename' event-click="open-keyboard"/>
       </horizontal>
       <modal-keyboard on-enter='OnSceneNameRenamed' show-event="open-keyboard" hide-event='closeAllMPModals'/>
       <checkbox text='Show in Menu' value='ShowInMenu' apply-on-change='true' get-event='showInMenuGet'/>
       <checkbox text='Show in Game' value='ShowInGame' apply-on-change='true' get-event='showInGameGet'/>
-      <checkbox text='Follow Room Adjust' />
-      <horizontal pad-top='15'>
+      <checkbox text='Follow Room Adjust' value='FollowRoomAdjust' apply-on-change='true' get-event='followRoomAdjustGet'/>
+      <horizontal pad-top='10'>
         <button text='Edit' on-click='OnEdit' />
-        <button text='Remove'/>
+        <button text='Delete'/>
       </horizontal>
     </settings-container>
   </horizontal>
-  <horizontal child-align='UpperRight' preferred-width='24'>
-    <button text='Save' font-size='3' pref-width='24' pref-height='5' on-click='OnNewScene'/>
-    <button text='Select Tracker' font-size='3' pref-width='24' pref-height='5'
-            click-event='showSelectTrackerModal' on-click='OnShowSelectTracker'/>
-  </horizontal>
-  <modal show-event="showSelectTrackerModal" hide-event="closeSelectTrackerModal"
-         move-to-center="true" click-off-closes="true" size-delta-x="120" size-delta-y="90" >
-    <vertical pad-top="3" pad-bottom="13">
-      <!-- Select Tracker List -->
-      <pg-button pref-width='110' dir='Up' click-event='SelectTrackerList#PageUp'/>
-      <list id='SelectTrackerList' list-style='Simple' expand-cell='true' select-cell='OnTrackerListCellSelected' />
-      <pg-button pref-width='110' dir='Down' click-event='SelectTrackerList#PageDown'/>
-    </vertical>
-    <bottom-button-panel>
-      <button click-event="closeSelectTrackerModal" on-click="OnTrackerSelectCancelled" text="Cancel"/>
-      <button click-event="closeSelectTrackerModal" text="Select" />
-    </bottom-button-panel>
-  </modal>
+
+  <bottom-button-panel>
+    <button text='Save Scenes' font-size='5' on-click='OnSaveAll'/>
+    <button text='Reload Prefabs' font-size='5' on-click='OnReloadAll'/>
+  </bottom-button-panel>
+
 </bg>

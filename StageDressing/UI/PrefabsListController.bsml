@@ -1,0 +1,31 @@
+﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <vertical child-control-height='false'>
+
+    <!-- View Header -->
+    <horizontal pad-left='15' pad-right='15' bg='panel-top' pref-height='8'>
+      <vertical pad-left='1' pad-top='2' pref-height='12' vertical-fit='PreferredSize'>
+        <text font-size='6' text='List of Prefabs' overflow-mode='Ellipsis'/>
+      </vertical>
+    </horizontal>
+
+    <!-- Main View -->
+    <horizontal pad-left='3'>
+
+      <!-- Prefab List -->
+      <vertical background='round-rect-panel' pad-left='5' pad-right='5' preferred-height='60' preferred-width='60'>
+        <pg-button pref-width='50' dir='Up' click-event='PrefabsList#PageUp'/>
+        <list id='PrefabsList' list-style='Simple' expand-cell='true' select-cell='OnPrefabSelected' />
+        <pg-button pref-width='50' dir='Down' click-event='PrefabsList#PageDown'/>
+      </vertical>
+
+      <vertical preferred-width='5'/>
+
+      <!-- Settings  -->
+      <settings-container child-align='UpperCenter' preferred-height='60' preferred-width='65'>
+        <horizontal pad-left='3' pad-top='3'>
+          <button active='true' text='Create Instance' hover-hint='Create a new instance of this prefab'/>
+        </horizontal>
+      </settings-container>
+    </horizontal>
+  </vertical>
+</bg>

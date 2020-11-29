@@ -5,8 +5,9 @@ using UnityEngine;
 namespace StageDressing.Models
 {
     [Serializable]
-    public class InstanceInfo
+    public class InstanceData
     {
+        [JsonConverter(typeof(PoseConverter))]
         public Pose Pose { get; set; }
         public float Scale { get; set; }
 
@@ -20,8 +21,10 @@ namespace StageDressing.Models
 
         public string CalibratedTrackerSerial { get; set; }
 
+        [JsonConverter(typeof(PoseConverter))]
         public Pose CalibratedPose { get; set; }
 
+        [JsonConverter(typeof(PoseConverter))]
         public Pose CalibratedTrackerPose { get; set; }
 
         #endregion

@@ -4,7 +4,6 @@ using BeatSaberMarkupLanguage.Parser;
 using BeatSaberMarkupLanguage.ViewControllers;
 using HMUI;
 using StageDressing.Models;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace StageDressing.UI
@@ -12,68 +11,13 @@ namespace StageDressing.UI
     [HotReload]
     public class SceneListViewController : BSMLAutomaticViewController
     {
-        public ModMainFlowCoordinator MainFlowCoordinator { get; set; }
+        public ModMainFlowCoordinator MainFlowCoordinator { get; private set; }
+        public PrefabsListController PrefabsListView { get; private set; }
 
-#pragma warning disable CS0649
-        [UIParams]
-        BSMLParserParams parserParams;
-#pragma warning restore CS0649
-
-
-        #region SelectTracker Members
-
-        public string SelectedTrackerSerial { get; set; }
-        private List<string> LoadedSerials;
-
-        [UIComponent("SelectTrackerList")]
-        public CustomListTableData trackerList;
-
-        [UIAction("OnShowSelectTracker")]
-        private void OnShowSelectTracker()
-        {
-            StageDressing.Logger.Info($"selectTrackerList null? {this.trackerList == null}");
-            StageDressing.Logger.Info($"selectTrackerList.tableView null? {this.trackerList.tableView == null}");
-            StageDressing.Logger.Info($"selectTrackerList.data null? {this.trackerList.data == null}");
-
-            this.trackerList.tableView.ClearSelection();
-            this.trackerList.data.Clear();
-
-            PersistentSingleton<TrackedDeviceManager>.instance.LoadTrackedDevices();
-            PersistentSingleton<TrackedDeviceManager>.instance.TrackedDevices.ForEach(t =>
-            {
-                string text = $"{t.serialNumber}: {t.manufacturer} {t.name}";
-                var customCellInfo = new CustomListTableData.CustomCellInfo(text);
-                this.trackerList.data.Add(customCellInfo);
-            });
-
-            // Save the list of serials for later reference
-            this.LoadedSerials = PersistentSingleton<TrackedDeviceManager>.instance.TrackedDevices.Select(t => t.serialNumber).ToList();
-
-            this.trackerList.tableView.ReloadData();
-        }
-
-        [UIAction("OnTrackerListCellSelected")]
-        public void OnTrackerListCellSelected(TableView _, int row)
-        {
-            StageDressing.Logger.Info($"Selected Tracker: {this.SelectedTrackerSerial}");
-            this.SelectedTrackerSerial = LoadedSerials[row];
-        }
-
-        [UIAction("OnTrackerSelectCancelled")]
-        private void OnTrackerSelectCancelled()
-        {
-            this.SelectedTrackerSerial = null;
-        }
-
-        #endregion
+        public Models.SceneData SelectedScene { get; set; }
 
         [UIComponent("SceneList")]
-        public CustomCellListTableData sceneList;
-
-        [UIValue("SceneListContents")]
-        public List<object> sceneListContents = new List<object>();
-
-        public Models.SceneInfo SelectedScene { get; private set; }
+        public CustomListTableData sceneList;
 
         //[UIComponent("SceneNameKeyboard")]
         //private ModalKeyboard sceneNameKeyboard;
@@ -81,18 +25,7 @@ namespace StageDressing.UI
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
             base.DidActivate(firstActivation, activationType);
-
-            if (firstActivation)
-            {
-                this.sceneList.tableView.ClearSelection();
-                PersistentSingleton<StageManager>.instance.Configuration.Scenes.ForEach(s =>
-                {
-                    this.sceneListContents.Add(new SceneListItem { Name = s.Name, Data = s });
-                });
-            }
-
-            if (this.sceneList != null)
-                this.sceneList.tableView.ReloadData();
+            ReloadSceneList();
         }
 
         private string selectedSceneName;
@@ -113,8 +46,6 @@ namespace StageDressing.UI
                 this.showInMenu = value;
                 this.SelectedScene.ShowInMenu = value;
                 this.parserParams.EmitEvent("showInMenuGet");
-                PersistentSingleton<StageManager>.instance.LoadPrefabs();
-                PersistentSingleton<StageManager>.instance.RebuildMenuInstances();
             }
         }
 
@@ -128,8 +59,19 @@ namespace StageDressing.UI
                 this.showInGame = value;
                 this.SelectedScene.ShowInGame = value;
                 this.parserParams.EmitEvent("showInGameGet");
-                PersistentSingleton<StageManager>.instance.LoadPrefabs();
-                PersistentSingleton<StageManager>.instance.RebuildMenuInstances();
+            }
+        }
+
+        private bool followRoomAdjust;
+        [UIValue("FollowRoomAdjust")]
+        public bool FollowRoomAdjust
+        {
+            get => this.followRoomAdjust;
+            set
+            {
+                this.followRoomAdjust = value;
+                this.SelectedScene.FollowRoomAdjust = value;
+                this.parserParams.EmitEvent("followRoomAdjustGet");
             }
         }
 
@@ -140,48 +82,61 @@ namespace StageDressing.UI
         }
 
         [UIAction("OnSceneSelected")]
-        private void OnSceneSelected(TableView sender, SceneListItem item)
+        private void OnSceneSelected(TableView _, int row)
         {
-            this.SelectedScene = item.Data;
+            this.SelectedScene = StageManager.instance.Configuration.Scenes.ElementAt(row);
             this.SelectedSceneName = this.SelectedScene.Name;
             this.ShowInMenu = this.SelectedScene.ShowInMenu;
             this.ShowInGame = this.SelectedScene.ShowInGame;
         }
 
-        [UIAction("OnNewScene")]
-        private void OnNewScene()
+        [UIAction("OnSaveAll")]
+        private void OnSaveAll()
         {
             StageDressing.Logger.Info("OnNewScene");
-            PersistentSingleton<StageManager>.instance.SaveConfiguration();
+            StageManager.instance.SaveConfiguration();
         }
 
-        [UIAction("OnCalibrate")]
-        private void OnCalibrate()
+        [UIAction("OnReloadAll")]
+        private void OnReloadAll()
         {
-            StageDressing.Logger.Info("OnCalibrate");
-            PersistentSingleton<TrackedDeviceManager>.instance.StageDressing.trackedMenuObjectBehavior.Calibrate();
-        }
+            StageDressing.Logger.Info("OnReloadAll");
+            StageManager.instance.LoadConfiguration();
+            this.ReloadSceneList();
 
-        [UIAction("OnUnCalibrate")]
-        private void OnUnCalibrate()
-        {
-            StageDressing.Logger.Info("OnUnCalibrate");
-            PersistentSingleton<TrackedDeviceManager>.instance.StageDressing.trackedMenuObjectBehavior.UnCalibrate();
+            StageManager.instance.LoadPrefabs();
+            StageManager.instance.RebuildMenuInstances();
         }
 
         [UIAction("OnEdit")]
         private void OnEdit()
         {
-            StageDressing.Logger.Info("OnEdit");
-            this.MainFlowCoordinator.ShowSceneEdit();
+            if (this.SelectedScene == null) return;
+            this.PrefabsListView.SetScene(this.SelectedScene);
+            this.MainFlowCoordinator.ShowSceneEdit(this.SelectedScene);
         }
-    }
 
-    public class SceneListItem
-    {
-        [UIValue("SceneName")]
-        public string Name { get; set; }
+        private void ReloadSceneList()
+        {
+            this.sceneList.tableView.ClearSelection();
+            this.sceneList.data.Clear();
+            StageManager.instance.Configuration.Scenes.ForEach(s => this.sceneList.data.Add(new CustomListTableData.CustomCellInfo(s.Name)));
+            this.sceneList.tableView.ReloadData();
+        }
 
-        public Models.SceneInfo Data { get; set; }
+        public void SetMainFlowCoordinator(ModMainFlowCoordinator modMainFlowCoordinator)
+        {
+            this.MainFlowCoordinator = modMainFlowCoordinator;
+        }
+
+        public void SetPrefabsListView(PrefabsListController prefabListView)
+        {
+            this.PrefabsListView = prefabListView;
+        }
+
+#pragma warning disable CS0649
+        [UIParams]
+        BSMLParserParams parserParams;
+#pragma warning restore CS0649
     }
 }

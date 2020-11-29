@@ -6,6 +6,6 @@ namespace StageDressing.Models
     [Serializable]
     public class StageConfigurationData
     {
-        public List<SceneInfo> Scenes { get; set; }
+        public List<SceneData> Scenes { get; set; }
     }
 }
